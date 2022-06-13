@@ -1,5 +1,6 @@
 using API_Practice.ClassModels;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using RestSharp;
 using System;
@@ -39,13 +40,17 @@ namespace API_Practice.StepDefinitions
             var userResponse = _scenarioContext.Get<IRestResponse>("open user page");
             var userInfo = JsonConvert.DeserializeObject<Root>(userResponse.Content);
             var listResponse = _scenarioContext.Get<IRestResponse>("open list of users");
-            var userList = JsonConvert.DeserializeObject<userListInfo>(listResponse.Content);
+            //var userList = JsonConvert.DeserializeObject<userListInfo>(listResponse.Content);
 
-            //var lname = userInfo.data.last_name;
+            JObject listUsers = JObject.Parse(listResponse.Content);
+            JToken parsedUser = listUsers.SelectToken("$.data");
+            var userResult = parsedUser.Where(c => (string)c["first_name"] == "Janet").FirstOrDefault();
+            var userValue = JsonConvert.DeserializeObject<Datum>(userResult.ToString());
 
-            //var name = userList.data[0].first_name; //there is probably a c# sharp way of pinpointing this one 
+            //var val = userList.first_name;
 
-            Assert.AreEqual(userInfo.data.first_name, userList.data[1].first_name);
+            Assert.AreEqual(userInfo.data.first_name, userValue.first_name, "The information is incorrect");
+
 
         }
     }
